@@ -1,0 +1,1039 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>随机点名系统</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Pacifico&family=Noto+Sans+SC&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%232ecc71'/></svg>" type="image/svg+xml">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.16.9/xlsx.full.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2ecc71;
+            --background-color: #ecf0f0;
+            --text-color: #34495e;
+            --highlight-color: #e74c3c;
+            --disabled-color: #bdc3c7;
+        }
+        body {
+            font-family: 'KaiTi', '楷体', 'STKaiti', 'Roboto', 'Noto Sans SC', sans-serif;
+            background-color: #f0f4f8;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            color: var(--text-color);
+            overflow: hidden;
+            position: relative;
+        }
+        video{
+            position: fixed;
+            right: 0;
+            bottom: 0;
+            min-width: 100%;
+            min-height: 100%;
+            width: auto;
+            height: auto;
+            z-index: -100;
+            -webkit-filter: grayscale(20%);
+        }
+        .container {
+            max-width: 1200px;
+            width: 90%;
+            background-color: rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(20px);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            padding: 30px;
+            position: relative;
+            z-index: 1;
+        }
+        h1 {
+            font-size: 36px;
+            text-align: center;
+            color: var(--primary-color);
+            margin-bottom: 20px;
+        }
+        .class-buttons {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            justify-content: flex-end;
+        }
+        .class-button {
+            font-size: 14px;
+            padding: 8px 16px;
+            margin: 0 5px;
+            border: none;
+            border-radius: 15px;
+            background-color: var(--disabled-color);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .class-button:hover:not(.active) {
+            background-color: #27ae60;
+        }
+        .class-button.active {
+            background-color: var(--secondary-color);
+        }
+        .class-button.disabled {
+            background-color: var(--disabled-color);
+            cursor: not-allowed;
+        }
+        .name-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .name-item {
+            background-color: #e8f5e9; /* 更浅的绿色背景 */
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            font-family: 'Microsoft YaHei', '微软雅黑', sans-serif;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .name-item::before {
+            content: '';
+            position: absolute;
+            top: -10px;
+            left: -10px;
+            right: -10px;
+            bottom: -10px;
+            background: 
+                linear-gradient(45deg, transparent 48%, #4caf50 48%, #4caf50 52%, transparent 52%),
+                linear-gradient(-45deg, transparent 48%, #4caf50 48%, #4caf50 52%, transparent 52%);
+            background-size: 20px 20px;
+            opacity: 0.1;
+            z-index: 1;
+        }
+
+        .name-item::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(76,175,80,0.3) 0%, transparent 50%, rgba(76,175,80,0.1) 100%);
+            z-index: 2;
+        }
+
+        .name-item span {
+            position: relative;
+            z-index: 3;
+            color: #000000; /* 保持文字颜色为黑色 */
+        }
+
+        .name-item.highlight {
+            background-color: #4caf50; /* 高亮时的绿色 */
+            color: white;
+            transform: scale(1.1);
+            box-shadow: 0 0 20px rgba(76, 175, 80, 0.5);
+        }
+
+        .name-item.highlight::before {
+            opacity: 0.2;
+        }
+
+        .name-item.highlight::after {
+            background: linear-gradient(135deg, rgba(255,255,255,0.5) 0%, transparent 50%, rgba(0,0,0,0.2) 100%);
+        }
+
+        .name-item.highlight span {
+            color: white; /* 高亮时保持文字颜色为白色 */
+        }
+
+        .start-button {
+            display: block;
+            margin: 20px auto;
+            font-size: 18px;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 25px;
+            background-color: var(--highlight-color);
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .start-button:hover {
+            background-color: #c0392b;
+        }
+        .start-button:disabled {
+            background-color: #95a5a6;
+            cursor: not-allowed;
+        }
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: transparent;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s, visibility 0.3s;
+            z-index: 1000;
+        }
+        .overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        .result-message {
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+            position: relative;
+            z-index: 1001;
+        }
+        .result-message h2 {
+            font-size: 48px;
+            color: var(--highlight-color);
+            margin-bottom: 20px;
+        }
+        .result-message p {
+            font-size: 36px;
+            color: var(--highlight-color);
+            font-weight: bold;
+            font-family: 'Microsoft YaHei', '微软雅黑', sans-serif;
+        }
+        .close-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--text-color);
+        }
+        .class-info {
+            position: static;
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin: 20px 0;
+        }
+        .file-upload {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            cursor: pointer;
+        }
+        .file-upload-input {
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            cursor: pointer;
+            width: 100%;
+            height: 100%;
+        }
+        .file-upload-btn {
+            display: inline-block;
+            padding: 8px 16px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+        .file-upload:hover .file-upload-btn {
+            background-color: #2980b9;
+        }
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0) scale(1);
+            }
+            50% {
+                transform: translateY(-50px) scale(1.1);
+            }
+        }
+        /* 添加几何图形 */
+        .geometric-shapes {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .shape {
+            position: absolute;
+            opacity: 0.1;
+            animation: rotate 30s linear infinite;
+        }
+        .shape:nth-child(1) {
+            top: 20%;
+            left: 10%;
+            width: 50px;
+            height: 50px;
+            background-color: #3498db;
+            clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+        }
+        .shape:nth-child(2) {
+            top: 70%;
+            right: 15%;
+            width: 70px;
+            height: 70px;
+            background-color: #e74c3c;
+            border-radius: 50%;
+        }
+        .shape:nth-child(3) {
+            bottom: 10%;
+            left: 20%;
+            width: 60px;
+            height: 60px;
+            background-color: #2ecc71;
+            clip-path: polygon(25% 0%, 100% 0%, 75% 100%, 0% 100%);
+        }
+        @keyframes rotate {
+            from {
+                transform: rotate(0deg);
+            }
+            to {
+                transform: rotate(360deg);
+            }
+        }
+        
+        /* 添加的卡片样式 */
+        .card-container {
+            position: relative;
+            width: 600px;
+            height: 320px;
+            margin: 20px auto;
+            overflow: hidden;
+            background-color: #f0f0f0;
+            border-radius: 20px;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+        }
+        .card-wrapper {
+            display: flex;
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            transition: left 5s cubic-bezier(0.25, 0.1, 0.25, 1);
+        }
+        .card {
+            width: 160px;
+            height: 240px;
+            background: linear-gradient(135deg, #ffffff 0%, #f0f0f0 100%);
+            border: none;
+            border-radius: 15px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-size: 18px;
+            color: #333;
+            margin: 0 15px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            transition: all 0.5s ease;
+            position: relative;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                linear-gradient(45deg, transparent 48%, #4caf50 48%, #4caf50 52%, transparent 52%),
+                linear-gradient(-45deg, transparent 48%, #4caf50 48%, #4caf50 52%, transparent 52%);
+            background-size: 30px 30px;
+            opacity: 0.1;
+        }
+        .card::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: linear-gradient(90deg, #3498db, #2ecc71);
+            border-radius: 0 0 15px 15px;
+        }
+        .card-result {
+            position: absolute;
+            top: -30px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: #e74c3c;
+            opacity: 0;
+            transition: all 0.5s ease;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .card .card-name {
+            transition: all 0.5s ease;
+            padding: 15px;
+            border-radius: 8px;
+            background-color: rgba(255,255,255,0.9);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            z-index: 1;
+            font-family: 'Microsoft YaHei', '微软雅黑', sans-serif;
+        }
+        .card.selected {
+            transform: scale(1.2);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            z-index: 10;
+        }
+        .card.selected .card-name {
+            color: #e74c3c;
+            font-weight: bold;
+            font-size: 24px;
+            background-color: rgba(255,255,255,1);
+        }
+        .card.selected .card-result {
+            opacity: 1;
+            top: 25px;
+        }
+        .card:not(.selected) {
+            filter: blur(1px);
+            opacity: 0.8;
+        }
+
+        /* 添加切换按钮样式 */
+        .toggle-button {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            padding: 8px 16px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .toggle-button:hover {
+            background-color: #2980b9;
+        }
+
+        /* 添加语言切换按钮样式 */
+        .language-switch {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+        .language-switch button {
+            padding: 8px 16px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            font-size: 14px;
+            line-height: 1;
+        }
+        .language-switch button:hover {
+            background-color: #2980b9;
+        }
+
+        /* 修改容器样式 */
+        .container {
+            position: relative;
+            /* ... 保留其他容器样式 ... */
+        }
+
+        /* 修改文件上传按钮样式 */
+        .file-upload {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 10;
+        }
+        .file-upload button {
+            padding: 8px 16px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            font-size: 14px;
+            line-height: 1;
+        }
+        .file-upload button:hover {
+            background-color: #2980b9;
+        }
+        .file-upload input[type=file] {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        /* 修改语言切换按钮样式 */
+        .language-switch {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+        .language-switch button {
+            padding: 8px 16px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            font-size: 14px;
+            line-height: 1;
+        }
+        .language-switch button:hover {
+            background-color: #2980b9;
+        }
+
+        /* 删除不再需要的 .top-right-buttons 样式 */
+
+        /* 添加英文字体样式 */
+        .english-font {
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        /* 添加版权声明样式 */
+        .footerinfo {
+            position: fixed;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 12px;
+            color: rgba(52, 73, 94, 0.7);
+            text-align: center;
+            width: 100%;
+            z-index: 1000;
+        }
+
+        /* 在 <body> 标签内,语言切换按钮旁边添加音频开关按钮 */
+        .top-right-buttons {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            display: flex;
+            gap: 10px;
+        }
+
+        .top-right-buttons button {
+            padding: 8px 16px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            font-size: 14px;
+            line-height: 1;
+        }
+
+        .top-right-buttons button:hover {
+            background-color: #2980b9;
+        }
+    </style>
+</head>
+<body>
+    <!-- <div class="geometric-shapes">
+        <div class="shape"></div>
+        <div class="shape"></div>
+        <div class="shape"></div>
+    </div> -->
+    <video src="bg.webm" loop="loop" autoplay="autoplay"></video>
+
+    
+    <!-- 将语言切换按钮移到 body 直接子元素 -->
+    <div class="top-right-buttons">
+        <button onclick="toggleAudio()" id="audioSwitch">关闭音效</button>
+        <button onclick="toggleLanguage()" id="languageSwitch">English</button>
+    </div>
+
+    <div class="container">
+        <h1>随机点名</h1>
+        <!-- 将文件上传按钮移到容器内 -->
+        <!-- <div class="file-upload">
+            <button id="uploadBtn">请上传班级名单</button>
+            <input type="file" id="excelFile" accept=".xlsx, .xls" onchange="handleFile(this.files[0])">
+        </div> -->
+        <div class="file-upload">
+            <button onclick="resetPickedNames()" id="resetBtn">重置点名记录</button>
+        </div>
+        <!-- 添加切换按钮 -->
+        <button id="toggleButton" class="toggle-button" onclick="toggleEffect()">切换为卡牌效果</button>
+        <div id="classInfo" class="class-info"></div>
+        <div id="nameGrid" class="name-grid"></div>
+        <!-- 添加卡片容器 -->
+        <div id="cardContainer" class="card-container" style="display: none;">
+            <div class="card-wrapper">
+                <!-- 卡片将通过 JavaScript 动态生成 -->
+            </div>
+        </div>
+        <button id="startButton" class="start-button" onclick="startRandomPick()" disabled>开始点名</button>
+    </div>
+
+    <div id="overlay" class="overlay">
+        <div class="result-message">
+            <span class="close-button" onclick="closeOverlay()">&times;</span>
+            <h2>就是你了！</h2>
+            <p id="selectedName"></p>
+        </div>
+    </div>
+
+    <!-- 在 <body> 标签内添加新的音频元素 -->
+    <audio id="pickSound" preload="auto">
+        <source src="pick_sound.mp3" type="audio/mpeg">
+        您的浏览器不支持音频元素。
+    </audio>
+    <audio id="marqueeSound" preload="auto">
+        <source src="marquee_sound.mp3" type="audio/mpeg">
+        您的浏览器不支持音频元素。
+    </audio>
+    <audio id="cardSound" preload="auto">
+        <source src="card_sound.mp3" type="audio/mpeg">
+        您的浏览器不支持音频元素。
+    </audio>
+
+    <script>
+        let names = [];
+        let isRunning = false;
+        let pickedNames = [];
+        let isCardEffect = false;
+
+        let isAudioEnabled = true; // 默认开启音效
+
+        function resetPickedNames() {
+            pickedNames = JSON.parse(localStorage.getItem('pickedNames')) || [];
+            localStorage.setItem('pickedNames', '[]');
+            alert('已清空历史点名记录：'+ pickedNames.length + '条\n' + '历史名单：' + pickedNames.join(', '));
+        }
+
+        function toggleAudio() {
+            isAudioEnabled = !isAudioEnabled;
+            const audioSwitch = document.getElementById('audioSwitch');
+            audioSwitch.textContent = isAudioEnabled ? (isEnglish ? 'Mute' : '关闭音效') : (isEnglish ? 'Unmute' : '开启音效');
+        }
+
+        function handleFile(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, {type: 'array'});
+                const firstSheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[firstSheetName];
+                const excelNames = XLSX.utils.sheet_to_json(worksheet, {header: 1}).flat().filter(Boolean);
+                
+                // 生成并下载 JavaScript 文件
+                const jsContent = `const classNames = ${JSON.stringify(excelNames)};`;
+                const blob = new Blob([jsContent], {type: 'application/javascript'});
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = 'class_names.js';
+                link.click();
+                URL.revokeObjectURL(link.href);
+
+                alert('已生成 class_names.js 文件。请将此文件放入与 HTML 文件相同的文件夹中，然后刷新页面。');
+
+                document.getElementById('uploadBtn').textContent = "重新上传班级名单";
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function updateClassInfo() {
+            const classInfo = document.getElementById('classInfo');
+            const lang = isEnglish ? 'en' : 'zh';
+            classInfo.textContent = translations[lang]['classInfo'].replace('{0}', names.length);
+            classInfo.style.display = names.length > 0 ? 'block' : 'none';
+        }
+
+        function updateNameGrid() {
+            const nameGrid = document.getElementById('nameGrid');
+            nameGrid.innerHTML = names.map(name => `<div class="name-item"><span>${name}</span></div>`).join('');
+        }
+
+        function toggleEffect() {
+            isCardEffect = !isCardEffect;
+            const toggleButton = document.getElementById('toggleButton');
+            const nameGrid = document.getElementById('nameGrid');
+            const cardContainer = document.getElementById('cardContainer');
+            
+            updateToggleButtonText(); // 新增这行
+            
+            if (isCardEffect) {
+                nameGrid.style.display = 'none';
+                cardContainer.style.display = 'block';
+                updateCardNames(); // 更新卡片上的名字
+            } else {
+                nameGrid.style.display = 'grid';
+                cardContainer.style.display = 'none';
+            }
+        }
+
+        // 新增这个函数
+        function updateToggleButtonText() {
+            const toggleButton = document.getElementById('toggleButton');
+            const lang = isEnglish ? 'en' : 'zh';
+            toggleButton.textContent = isCardEffect ? translations[lang]['toggleEffectCard'] : translations[lang]['toggleEffect'];
+        }
+
+        function updateCardNames() {
+            const cardWrapper = document.querySelector('.card-wrapper');
+            cardWrapper.innerHTML = '';
+            const totalCards = names.length + 4; // 额外添加一些卡片以确保滑动效果流畅
+            const lang = isEnglish ? 'en' : 'zh';
+
+            for (let i = 0; i < totalCards; i++) {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.innerHTML = `
+                    <div class="card-result ${isEnglish ? 'english-font' : ''}">${translations[lang]['resultTitle']}</div>
+                    <span class="card-name" style="font-family: 'Microsoft YaHei', '微软雅黑', sans-serif;">${names[i % names.length]}</span>
+                `;
+                cardWrapper.appendChild(card);
+            }
+        }
+
+        function startRandomPick() {
+            if (names.length < 2 || isRunning) {
+                return;
+            }
+            
+            isRunning = true;
+            const startButton = document.getElementById('startButton');
+            startButton.disabled = true;
+            
+            // const animationDuration = 1500; // 设置动画持续时间
+            
+            if (isCardEffect) {
+                playPickSound('card');
+                resetCardEffect();
+                startCardEffect(1200);
+            } else {
+                playPickSound('marquee');
+                startMarqueeEffect(1500);
+            }
+        }
+
+        function startMarqueeEffect(duration) {
+            const nameItems = document.querySelectorAll('.name-item');
+            nameItems.forEach(item => item.classList.remove('highlight'));
+            
+            let highlightIndex = 0;
+            const intervalId = setInterval(() => {
+                nameItems[highlightIndex].classList.remove('highlight');
+                highlightIndex = Math.floor(Math.random() * nameItems.length);
+                nameItems[highlightIndex].classList.add('highlight');
+            }, 100);
+            
+            setTimeout(() => {
+                clearInterval(intervalId);
+                finishRandomPick(nameItems);
+            }, duration);
+        }
+
+        function startCardEffect(duration) {
+            const selectedName = getRandomName(); // 先选择一个人
+            const cardWrapper = document.querySelector('.card-wrapper');
+            const cards = cardWrapper.querySelectorAll('.card');
+            const totalCards = cards.length;
+            const centerIndex = Math.floor(totalCards / 2);
+            const lang = isEnglish ? 'en' : 'zh';
+            
+            // 重新排列卡片，使选中的名字在中间
+            const newOrder = [];
+            for (let i = 0; i < totalCards; i++) {
+                const index = (centerIndex - i + totalCards) % totalCards;
+                newOrder.push(names[(names.indexOf(selectedName) - index + names.length) % names.length]);
+            }
+            
+            cards.forEach((card, index) => {
+                card.querySelector('.card-name').textContent = newOrder[index];
+                const cardResult = card.querySelector('.card-result');
+                cardResult.textContent = translations[lang]['resultTitle'];
+                cardResult.classList.toggle('english-font', isEnglish);
+                card.style.transform = `translateX(${(index - centerIndex) * 190}px)`;
+                card.style.opacity = 1;
+                card.style.filter = 'blur(0px)';
+            });
+
+            const totalSlide = (centerIndex - 1) * 190;
+
+            cardWrapper.style.transition = 'none';
+            cardWrapper.style.left = '0px';
+            
+            setTimeout(() => {
+                cardWrapper.style.transition = `left ${duration/1000}s cubic-bezier(0.25, 0.1, 0.25, 1)`;
+                cardWrapper.style.left = `-${totalSlide}px`;
+                cards.forEach((card, index) => {
+                    card.style.transition = `all ${duration/1000}s cubic-bezier(0.25, 0.1, 0.25, 1)`;
+                    card.style.transform = 'translateX(0)';
+                });
+            }, 50);
+
+            setTimeout(() => {
+                finishRandomPick(selectedName);
+            }, duration);
+        }
+
+        function finishRandomPick(selectedNameOrItems) {
+            const startButton = document.getElementById('startButton');
+            
+            if (isCardEffect) {
+                // 卡片模式的逻辑保持不变
+                const cards = document.querySelectorAll('.card');
+                const centerCard = cards[Math.floor(cards.length / 2)];
+                cards.forEach(card => {
+                    card.classList.remove('selected');
+                    card.style.transition = 'all 0.5s ease';
+                    card.style.filter = 'blur(1px)';
+                    card.style.opacity = '0.8';
+                });
+                centerCard.classList.add('selected');
+                centerCard.style.filter = 'blur(0px)';
+                centerCard.style.opacity = '1';
+                centerCard.style.transform = 'scale(1.2)';
+                
+                setTimeout(() => {
+                    centerCard.querySelector('.card-result').style.opacity = '1';
+                    centerCard.querySelector('.card-name').style.color = '#e74c3c';
+                }, 500);
+
+                // 确保选中的卡片在视图中央
+                const cardContainer = document.querySelector('.card-container');
+                const cardRect = centerCard.getBoundingClientRect();
+                const containerRect = cardContainer.getBoundingClientRect();
+                const offset = cardRect.left - containerRect.left - (containerRect.width - cardRect.width) / 2;
+                const cardWrapper = document.querySelector('.card-wrapper');
+                cardWrapper.style.transition = 'left 0.5s cubic-bezier(0.25, 0.1, 0.25, 1)';
+                cardWrapper.style.left = `${cardWrapper.offsetLeft - offset}px`;
+            } else {
+                // 跑马灯模式的逻辑
+                const overlay = document.getElementById('overlay');
+                const selectedNameElement = document.getElementById('selectedName');
+                const nameItems = document.querySelectorAll('.name-item');
+                let selectedName = '';
+
+                nameItems.forEach(item => {
+                    item.classList.remove('highlight');
+                    if (item.classList.contains('highlight')) {
+                        selectedName = item.textContent;
+                    }
+                });
+
+                // 如果没有找到高亮的元素，就随机选择一个
+                if (!selectedName) {
+                    selectedName = getRandomName();
+                }
+
+                // 高亮显示选中的名字
+                nameItems.forEach(item => {
+                    if (item.textContent === selectedName) {
+                        item.classList.add('highlight');
+                    }
+                });
+
+                selectedNameElement.textContent = selectedName;
+                overlay.classList.add('show');
+            }
+            
+            startButton.disabled = false;
+            isRunning = false;
+        }
+
+        function getRandomName() {
+            // 从localStorage获取已点名学生列表
+            pickedNames = JSON.parse(localStorage.getItem('pickedNames')) || [];
+            
+            // 如果所有学生都被点过，重置列表
+            if (pickedNames.length >= names.length) {
+                pickedNames = [];
+            }
+            
+            // 筛选出未被点到的学生
+            const availableNames = names.filter(name => !pickedNames.includes(name));
+            
+            // 随机选择一个未被点到的学生
+            const selectedName = availableNames[Math.floor(Math.random() * availableNames.length)];
+            
+            // 选中的学生添加到已点名列表
+            pickedNames.push(selectedName);
+            
+            // 更新localStorage
+            localStorage.setItem('pickedNames', JSON.stringify(pickedNames));
+            
+            return selectedName;
+        }
+
+        function closeOverlay() {
+            document.getElementById('overlay').classList.remove('show');
+        }
+
+        function resetCardEffect() {
+            const cardWrapper = document.querySelector('.card-wrapper');
+            cardWrapper.style.transition = 'none';
+            cardWrapper.style.left = '0px';
+            const cards = cardWrapper.querySelectorAll('.card');
+            cards.forEach(card => {
+                card.classList.remove('selected');
+                card.querySelector('.card-result').style.opacity = '0';
+                card.querySelector('.card-name').style.color = '';
+            });
+        }
+
+        // 添加语言切换功能
+        let isEnglish = false;
+        const translations = {
+            'zh': {
+                'title': '随机点名',
+                'toggleEffect': '切换为卡牌效果',
+                'toggleEffectCard': '切换为跑马灯效果',
+                'uploadBtn': '请上传班级名单',
+                'uploadBtnAgain': '重新上传班级名单',
+                'startButton': '开始点名',
+                'resultTitle': '就是你了！',
+                'classInfo': '当前班级：共{0}人',
+                'languageSwitch': 'English',
+                'closeButton': '关闭',
+                'footerinfo': 'Modified by MeTerminator & Sponsored by whoopi',
+                'muteAudio': '关闭音效',
+                'unmuteAudio': '开启音',
+                'resetBtn': '重置点名记录'
+            },
+            'en': {
+                'title': 'Random Name Picker',
+                'toggleEffect': 'Switch to Card Effect',
+                'toggleEffectCard': 'Switch to Marquee Effect',
+                'uploadBtn': 'Upload Class List',
+                'uploadBtnAgain': 'Re-upload Class List',
+                'startButton': 'Start Picking',
+                'resultTitle': "It's You!",
+                'classInfo': 'Current Class: {0} students in total',
+                'languageSwitch': '中文',
+                'closeButton': 'Close',
+                'footerinfo': 'Modified by MeTerminator & Sponsored by whoopi',
+                'muteAudio': 'Mute',
+                'unmuteAudio': 'Unmute',
+                'resetBtn': 'Reset Picking Record'
+            }
+        };
+
+        function toggleLanguage() {
+            isEnglish = !isEnglish;
+            const lang = isEnglish ? 'en' : 'zh';
+            document.documentElement.lang = lang;
+            document.body.style.fontFamily = isEnglish ? "'Montserrat', sans-serif" : "'KaiTi', '楷体', 'STKaiti', 'Roboto', 'Noto Sans SC', sans-serif";
+            
+            // 更新名字的字体
+            const nameItems = document.querySelectorAll('.name-item');
+            nameItems.forEach(item => {
+                item.style.fontFamily = "'Microsoft YaHei', '微软雅黑', sans-serif";
+            });
+            
+            updateTexts();
+            updateCardNames();
+        }
+
+        function updateTexts() {
+            const lang = isEnglish ? 'en' : 'zh';
+            document.title = translations[lang]['title'];
+            
+            const elements = [
+                { selector: 'h1', key: 'title' },
+                { selector: '#uploadBtn', key: names.length > 0 ? 'uploadBtnAgain' : 'uploadBtn' },
+                { selector: '#startButton', key: 'startButton' },
+                { selector: '#resetBtn', key: 'resetBtn' },
+                { selector: '.result-message h2', key: 'resultTitle' },
+                { selector: '#languageSwitch', key: 'languageSwitch' },
+                { selector: '#audioSwitch', key: isAudioEnabled ? 'muteAudio' : 'unmuteAudio' },
+                { selector: '.close-button', key: 'closeButton' },
+                { selector: '.footerinfo', key: 'footerinfo' }
+            ];
+
+            elements.forEach(el => {
+                const element = document.querySelector(el.selector);
+                if (element) {
+                    element.textContent = translations[lang][el.key];
+                    element.classList.toggle('english-font', isEnglish);
+                }
+            });
+
+            updateToggleButtonText();
+            updateClassInfo();
+        }
+
+        function playPickSound(mode) {
+            if (!isAudioEnabled) return; // 如果音效关闭,直接返回
+            const audio = document.getElementById(mode === 'card' ? 'cardSound' : 'marqueeSound');
+            if (audio) {
+                audio.currentTime = 0;
+                audio.play().catch(e => console.log("播放音频失败:", e));
+            } else {
+                console.log("未找到音频元素");
+            }
+        }
+
+        // 修改 window.onload 函数
+        window.onload = function() {
+            document.getElementById('startButton').disabled = true;
+            document.getElementById('classInfo').style.display = 'none';
+
+            // 尝试加载 class_names.js 文件
+            const script = document.createElement('script');
+            script.src = 'class_names.js';
+            script.onload = function() {
+                if (typeof classNames !== 'undefined') {
+                    names = classNames;
+                    updateNameGrid();
+                    updateClassInfo();
+                    document.getElementById('startButton').disabled = false;
+                    document.getElementById('uploadBtn').textContent = translations[isEnglish ? 'en' : 'zh']['uploadBtnAgain'];
+                }
+            };
+            script.onerror = function() {
+                document.getElementById('uploadBtn').textContent = translations[isEnglish ? 'en' : 'zh']['uploadBtn'];
+            };
+            document.head.appendChild(script);
+
+            // 从localStorage加载已点名学生列表
+            pickedNames = JSON.parse(localStorage.getItem('pickedNames')) || [];
+
+            // 初始化卡片容器
+            updateCardNames();
+
+            // 初始化语言
+            updateTexts();
+        }
+    </script>
+
+    <!-- 添加版权声明 -->
+    <div class="footerinfo">Modified by MeTerminator & Sponsored by whoopi</div>
+</body>
+</html>
