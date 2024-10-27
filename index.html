@@ -38,7 +38,6 @@
             width: auto;
             height: auto;
             z-index: -100;
-            -webkit-filter: grayscale(20%);
         }
         .container {
             max-width: 1200px;
@@ -568,7 +567,7 @@
         <div class="shape"></div>
         <div class="shape"></div>
     </div> -->
-    <video src="bg.webm" loop="loop" autoplay="autoplay"></video>
+    <video src="bg.mp4" autoplay="autoplay" loop="loop" muted="muted"></video>
 
     
     <!-- 将语言切换按钮移到 body 直接子元素 -->
@@ -609,10 +608,10 @@
     </div>
 
     <!-- 在 <body> 标签内添加新的音频元素 -->
-    <audio id="pickSound" preload="auto">
+    <!-- <audio id="pickSound" preload="auto">
         <source src="pick_sound.mp3" type="audio/mpeg">
         您的浏览器不支持音频元素。
-    </audio>
+    </audio> -->
     <audio id="marqueeSound" preload="auto">
         <source src="marquee_sound.mp3" type="audio/mpeg">
         您的浏览器不支持音频元素。
@@ -1014,12 +1013,12 @@
                     updateNameGrid();
                     updateClassInfo();
                     document.getElementById('startButton').disabled = false;
-                    document.getElementById('uploadBtn').textContent = translations[isEnglish ? 'en' : 'zh']['uploadBtnAgain'];
+                    // document.getElementById('uploadBtn').textContent = translations[isEnglish ? 'en' : 'zh']['uploadBtnAgain'];
                 }
             };
-            script.onerror = function() {
-                document.getElementById('uploadBtn').textContent = translations[isEnglish ? 'en' : 'zh']['uploadBtn'];
-            };
+            // script.onerror = function() {
+            //     document.getElementById('uploadBtn').textContent = translations[isEnglish ? 'en' : 'zh']['uploadBtn'];
+            // };
             document.head.appendChild(script);
 
             // 从localStorage加载已点名学生列表
