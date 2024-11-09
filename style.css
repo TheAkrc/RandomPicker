@@ -1,0 +1,550 @@
+:root {
+    --primary-color: #3498db;
+    --secondary-color: #2ecc71;
+    --background-color: #ecf0f0;
+    --text-color: #34495e;
+    --highlight-color: #e74c3c;
+    --disabled-color: #bdc3c7;
+}
+body {
+    font-family: 'KaiTi', '楷体', 'STKaiti', 'Roboto', 'Noto Sans SC', sans-serif;
+    background-color: #f0f4f8;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    color: var(--text-color);
+    overflow: hidden;
+    position: relative;
+}
+video{
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    min-width: 100%;
+    min-height: 100%;
+    width: auto;
+    height: auto;
+    z-index: -100;
+}
+.container {
+    max-width: 1200px;
+    width: 90%;
+    background-color: rgba(255, 255, 255, 0.5);
+    backdrop-filter: blur(20px);
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    padding: 30px;
+    position: relative;
+    z-index: 1;
+}
+h1 {
+    font-size: 36px;
+    text-align: center;
+    color: var(--primary-color);
+    margin-bottom: 20px;
+}
+.class-buttons {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    justify-content: flex-end;
+}
+.class-button {
+    font-size: 14px;
+    padding: 8px 16px;
+    margin: 0 5px;
+    border: none;
+    border-radius: 15px;
+    background-color: var(--disabled-color);
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+.class-button:hover:not(.active) {
+    background-color: #27ae60;
+}
+.class-button.active {
+    background-color: var(--secondary-color);
+}
+.class-button.disabled {
+    background-color: var(--disabled-color);
+    cursor: not-allowed;
+}
+.name-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
+}
+.name-item {
+    background-color: #e8f5e9; /* 更浅的绿色背景 */
+    border-radius: 8px;
+    padding: 10px;
+    text-align: center;
+    font-size: 16px;
+    transition: all 0.3s ease;
+    font-family: 'Microsoft YaHei', '微软雅黑', sans-serif;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.name-item::before {
+    content: '';
+    position: absolute;
+    top: -10px;
+    left: -10px;
+    right: -10px;
+    bottom: -10px;
+    background: 
+        linear-gradient(45deg, transparent 48%, #4caf50 48%, #4caf50 52%, transparent 52%),
+        linear-gradient(-45deg, transparent 48%, #4caf50 48%, #4caf50 52%, transparent 52%);
+    background-size: 20px 20px;
+    opacity: 0.1;
+    z-index: 1;
+}
+
+.name-item::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(76,175,80,0.3) 0%, transparent 50%, rgba(76,175,80,0.1) 100%);
+    z-index: 2;
+}
+
+.name-item span {
+    position: relative;
+    z-index: 3;
+    color: #000000; /* 保持文字颜色为黑色 */
+}
+
+.name-item.highlight {
+    background-color: #4caf50; /* 高亮时的绿色 */
+    color: white;
+    transform: scale(1.1);
+    box-shadow: 0 0 20px rgba(76, 175, 80, 0.5);
+}
+
+.name-item.highlight::before {
+    opacity: 0.2;
+}
+
+.name-item.highlight::after {
+    background: linear-gradient(135deg, rgba(255,255,255,0.5) 0%, transparent 50%, rgba(0,0,0,0.2) 100%);
+}
+
+.name-item.highlight span {
+    color: white; /* 高亮时保持文字颜色为白色 */
+}
+
+.start-button {
+    display: block;
+    margin: 20px auto;
+    font-size: 18px;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 25px;
+    background-color: var(--highlight-color);
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+.start-button:hover {
+    background-color: #c0392b;
+}
+.start-button:disabled {
+    background-color: #95a5a6;
+    cursor: not-allowed;
+}
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: transparent;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s, visibility 0.3s;
+    z-index: 1000;
+}
+.overlay.show {
+    opacity: 1;
+    visibility: visible;
+}
+.result-message {
+    background-color: rgba(255, 255, 255, 0.9);
+    padding: 30px;
+    border-radius: 10px;
+    text-align: center;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+    position: relative;
+    z-index: 1001;
+}
+.result-message h2 {
+    font-size: 48px;
+    color: var(--highlight-color);
+    margin-bottom: 20px;
+}
+.result-message p {
+    font-size: 36px;
+    color: var(--highlight-color);
+    font-weight: bold;
+    font-family: 'Microsoft YaHei', '微软雅黑', sans-serif;
+}
+.close-button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 24px;
+    cursor: pointer;
+    color: var(--text-color);
+}
+.class-info {
+    position: static;
+    text-align: center;
+    font-size: 24px;
+    font-weight: bold;
+    color: var(--primary-color);
+    margin: 20px 0;
+}
+.file-upload {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    cursor: pointer;
+}
+.file-upload-input {
+    position: absolute;
+    left: 0;
+    top: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+}
+.file-upload-btn {
+    display: inline-block;
+    padding: 8px 16px;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 25px;
+    font-size: 14px;
+    transition: background-color 0.3s;
+}
+.file-upload:hover .file-upload-btn {
+    background-color: #2980b9;
+}
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0) scale(1);
+    }
+    50% {
+        transform: translateY(-50px) scale(1.1);
+    }
+}
+/* 添加几何图形 */
+.geometric-shapes {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 0;
+}
+.shape {
+    position: absolute;
+    opacity: 0.1;
+    animation: rotate 30s linear infinite;
+}
+.shape:nth-child(1) {
+    top: 20%;
+    left: 10%;
+    width: 50px;
+    height: 50px;
+    background-color: #3498db;
+    clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+}
+.shape:nth-child(2) {
+    top: 70%;
+    right: 15%;
+    width: 70px;
+    height: 70px;
+    background-color: #e74c3c;
+    border-radius: 50%;
+}
+.shape:nth-child(3) {
+    bottom: 10%;
+    left: 20%;
+    width: 60px;
+    height: 60px;
+    background-color: #2ecc71;
+    clip-path: polygon(25% 0%, 100% 0%, 75% 100%, 0% 100%);
+}
+@keyframes rotate {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* 添加的卡片样式 */
+.card-container {
+    position: relative;
+    width: 600px;
+    height: 320px;
+    margin: 20px auto;
+    overflow: hidden;
+    background-color: #f0f0f0;
+    border-radius: 20px;
+    box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+}
+.card-wrapper {
+    display: flex;
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    transition: left 5s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+.card {
+    width: 160px;
+    height: 240px;
+    background: linear-gradient(135deg, #ffffff 0%, #f0f0f0 100%);
+    border: none;
+    border-radius: 15px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    font-size: 18px;
+    color: #333;
+    margin: 0 15px;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+    transition: all 0.5s ease;
+    position: relative;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+.card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+        linear-gradient(45deg, transparent 48%, #4caf50 48%, #4caf50 52%, transparent 52%),
+        linear-gradient(-45deg, transparent 48%, #4caf50 48%, #4caf50 52%, transparent 52%);
+    background-size: 30px 30px;
+    opacity: 0.1;
+}
+.card::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 6px;
+    background: linear-gradient(90deg, #3498db, #2ecc71);
+    border-radius: 0 0 15px 15px;
+}
+.card-result {
+    position: absolute;
+    top: -30px;
+    left: 0;
+    width: 100%;
+    text-align: center;
+    font-size: 24px;
+    font-weight: bold;
+    color: #e74c3c;
+    opacity: 0;
+    transition: all 0.5s ease;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+.card .card-name {
+    transition: all 0.5s ease;
+    padding: 15px;
+    border-radius: 8px;
+    background-color: rgba(255,255,255,0.9);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    z-index: 1;
+    font-family: 'Microsoft YaHei', '微软雅黑', sans-serif;
+}
+.card.selected {
+    transform: scale(1.2);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+    z-index: 10;
+}
+.card.selected .card-name {
+    color: #e74c3c;
+    font-weight: bold;
+    font-size: 24px;
+    background-color: rgba(255,255,255,1);
+}
+.card.selected .card-result {
+    opacity: 1;
+    top: 25px;
+}
+.card:not(.selected) {
+    filter: blur(1px);
+    opacity: 0.8;
+}
+
+/* 添加切换按钮样式 */
+.toggle-button {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    padding: 8px 16px;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 25px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+.toggle-button:hover {
+    background-color: #2980b9;
+}
+
+/* 添加语言切换按钮样式 */
+.language-switch {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+}
+.language-switch button {
+    padding: 8px 16px;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    font-size: 14px;
+    line-height: 1;
+}
+.language-switch button:hover {
+    background-color: #2980b9;
+}
+
+/* 修改容器样式 */
+.container {
+    position: relative;
+    /* ... 保留其他容器样式 ... */
+}
+
+/* 修改文件上传按钮样式 */
+.file-upload {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    z-index: 10;
+}
+.file-upload button {
+    padding: 8px 16px;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    font-size: 14px;
+    line-height: 1;
+}
+.file-upload button:hover {
+    background-color: #2980b9;
+}
+.file-upload input[type=file] {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+}
+
+/* 修改语言切换按钮样式 */
+.language-switch {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+}
+.language-switch button {
+    padding: 8px 16px;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    font-size: 14px;
+    line-height: 1;
+}
+.language-switch button:hover {
+    background-color: #2980b9;
+}
+
+/* 删除不再需要的 .top-right-buttons 样式 */
+
+/* 添加英文字体样式 */
+.english-font {
+    font-family: 'Montserrat', sans-serif;
+}
+
+/* 添加版权声明样式 */
+.footerinfo {
+    position: fixed;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 12px;
+    color: rgba(52, 73, 94, 0.7);
+    text-align: center;
+    width: 100%;
+    z-index: 1000;
+}
+
+/* 在 <body> 标签内,语言切换按钮旁边添加音频开关按钮 */
+.top-right-buttons {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+    display: flex;
+    gap: 10px;
+}
+
+.top-right-buttons button {
+    padding: 8px 16px;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    font-size: 14px;
+    line-height: 1;
+}
+
+.top-right-buttons button:hover {
+    background-color: #2980b9;
+}

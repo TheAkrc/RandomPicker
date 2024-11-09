@@ -6,10 +6,12 @@ from http.server import CGIHTTPRequestHandler
 from http.server import ThreadingHTTPServer
 from functools import partial
 import contextlib
+import socket
 import sys
 import os
 
 print("随机点名工具启动成功，请点击桌面左上角“点”按钮。")
+
 
 class DualStackServer(ThreadingHTTPServer):
     def server_bind(self):
@@ -17,6 +19,7 @@ class DualStackServer(ThreadingHTTPServer):
         with contextlib.suppress(Exception):
             self.socket.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, 0)
         return super().server_bind()
+
 
 def http_server(server_class=DualStackServer, handler_class=SimpleHTTPRequestHandler, port=5000, bind='127.0.0.1', cgi=False, directory=os.getcwd()):
     if cgi:
